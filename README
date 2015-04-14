@@ -1,0 +1,13 @@
+HxC Floppy Emulator Manager for DOS
+-----------------------------------
+
+A port of the Amiga manager code to Microsoft C 6.0.
+Other versions of Microsoft C may work but are untested.
+Should work on everything from an IBM PC with MDA upwards.
+The prebuilt exe has been packed with UPX.
+
+Usage: HXCFS [driveid]
+
+driveid		The drive index of the HxC (0-3, default 0)
+
+Questions? Get in touch with me (bjt) on the HxC forum or vogons.org.
