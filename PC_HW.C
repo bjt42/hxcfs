@@ -134,8 +134,6 @@ unsigned char get_char(void)
 	    thechar=_bios_keybrd(_KEYBRD_READ);
 	}
 
-	hxc_printf(0,0,0,"Scan 0x%2x ASCII 0x%2x",thechar>>8,thechar&0xff);
-
 	return thechar&0xff;
 }
 

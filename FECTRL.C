@@ -62,6 +62,7 @@ static char filter[17];
 static unsigned char slotnumber;
 static char selectorpos;
 static unsigned char read_entry;
+static unsigned char filtermode;
 
 static disk_in_drive disks_slot_a[NUMBER_OF_SLOT];
 static disk_in_drive disks_slot_b[NUMBER_OF_SLOT];
@@ -525,6 +526,14 @@ void displayFolder()
         hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+8,"...%s    ",&currentPath[strlen(currentPath)-32]);
 }
 
+void displaySearch()
+{
+	if(filtermode)
+		hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"Search: [%s]",filter);
+	else
+		hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"                            ");
+}
+
 void enter_sub_dir(disk_in_drive* disk_ptr)
 {
 	int currentPathLength;
@@ -573,6 +582,9 @@ void enter_sub_dir(disk_in_drive* disk_ptr)
 	}
 
 	displayFolder();
+
+	filtermode=0;
+	displaySearch();
 
 	selectorpos=0;
 
@@ -623,9 +635,10 @@ int main(int argc,char* argv[])
 {
 	unsigned short i,page_number;
 	unsigned char key,entrytype,bootdev;
-	unsigned char last_file,filtermode,displayentry,c;
+	unsigned char last_file,displayentry,c;
 	disk_in_drive* disk_ptr;
 	cfgfile* cfgfile_ptr;
+	char tempLowerName[FATFS_MAX_LONG_FILENAME];
 
 	init_display();
 
@@ -692,8 +705,10 @@ int main(int argc,char* argv[])
 		cluster=fatfs_get_root_cluster(&_fs);
 		page_number=0;
 		last_file=0;
+
 		filtermode=0;
-		hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"                            ");
+		displaySearch();
+
 		fl_list_opendir(currentPath,&file_list_status);
 		for(i=0;i<512;i++)
 		{
@@ -724,9 +739,10 @@ int main(int argc,char* argv[])
 					{
 						if(filtermode)
 						{
-							strlwr(dir_entry.filename);
+							memcpy(tempLowerName,dir_entry.filename,FATFS_MAX_LONG_FILENAME);
+							strlwr(tempLowerName);
 
-							if(!strstr(dir_entry.filename,filter))
+							if(!strstr(tempLowerName,filter))
 							{
 								displayentry=0x00;
 							}
@@ -765,9 +781,6 @@ int main(int argc,char* argv[])
 					}
 
 				} while(i<NUMBER_OF_FILE_ON_DISPLAY);
-
-				filtermode=0;
-				hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"                            ");
 
 				memcpy(&file_list_status_tab[(page_number+1)&0x1FF],&file_list_status,sizeof(struct fs_dir_list_status));
 
@@ -908,6 +921,7 @@ int main(int argc,char* argv[])
 							init_buffer();
 							printslotstatus(slotnumber,(disk_in_drive*)&disks_slot_a[slotnumber],(disk_in_drive*)&disks_slot_b[slotnumber]);
 							displayFolder();
+							displaySearch();
 
 							memcpy(&file_list_status,&file_list_status_tab[page_number&0x1FF],sizeof(struct fs_dir_list_status));
 							clear_list(0);
@@ -1044,6 +1058,7 @@ int main(int argc,char* argv[])
 							init_buffer();
 							printslotstatus(slotnumber,(disk_in_drive*)&disks_slot_a[slotnumber],(disk_in_drive*)&disks_slot_b[slotnumber]);
 							displayFolder();
+							displaySearch();
 
 							memcpy(&file_list_status,&file_list_status_tab[page_number&0x1FF],sizeof(struct fs_dir_list_status));
 							clear_list(0);
@@ -1058,6 +1073,7 @@ int main(int argc,char* argv[])
 							init_buffer();
 							printslotstatus(slotnumber,(disk_in_drive*)&disks_slot_a[slotnumber],(disk_in_drive*)&disks_slot_b[slotnumber]);
 							displayFolder();
+							displaySearch();
 
 							memcpy(&file_list_status,&file_list_status_tab[page_number&0x1FF],sizeof(struct fs_dir_list_status));
 							clear_list(0);
@@ -1113,7 +1129,7 @@ int main(int argc,char* argv[])
 
 							} while((c!='\r')&&(c!=0x1B)&&(i<16));
 
-							if(c==0x1B)
+							if((c==0x1B)||(i==0)||(filter[0]=' '))
 							{
 								filtermode=0;
 								hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"                            ");
