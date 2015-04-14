@@ -89,7 +89,7 @@ void sleep(int duration)
 
 void lockup()
 {
-	sleep(3);
+	sleep(2);
 	quit();
 }
 
@@ -855,14 +855,19 @@ int main(int argc,char* argv[])
 							prev_slot();
 							break;
 
-						case FCT_SELECT_FILE_DRIVEA:
+						case FCT_ENTERSUBDIR:
 							disk_ptr=(disk_in_drive*)&DirectoryEntry_tab[selectorpos];
 
 							if(disk_ptr->DirEnt.attributes&0x10)
 							{
 								enter_sub_dir(disk_ptr);
 							}
-							else
+							break;
+
+						case FCT_SELECT_FILE_DRIVEA:
+							disk_ptr=(disk_in_drive*)&DirectoryEntry_tab[selectorpos];
+
+							if(!(disk_ptr->DirEnt.attributes&0x10))
 							{
 								memcpy((void*)&disks_slot_a[slotnumber],(void*)&DirectoryEntry_tab[selectorpos],sizeof(disk_in_drive));
 								printslotstatus(slotnumber,(disk_in_drive*)&disks_slot_a[slotnumber],(disk_in_drive*)&disks_slot_b[slotnumber]);
@@ -872,11 +877,7 @@ int main(int argc,char* argv[])
 						case FCT_SELECT_FILE_DRIVEB:
 							disk_ptr=(disk_in_drive*)&DirectoryEntry_tab[selectorpos];
 
-							if(disk_ptr->DirEnt.attributes&0x10)
-							{
-								enter_sub_dir(disk_ptr);
-							}
-							else
+							if(!(disk_ptr->DirEnt.attributes&0x10))
 							{
 								memcpy((void*)&disks_slot_b[slotnumber],(void*)&DirectoryEntry_tab[selectorpos],sizeof(disk_in_drive));
 								printslotstatus(slotnumber,(disk_in_drive*)&disks_slot_a[slotnumber],(disk_in_drive*)&disks_slot_b[slotnumber]);
@@ -1129,7 +1130,7 @@ int main(int argc,char* argv[])
 
 							} while((c!='\r')&&(c!=0x1B)&&(i<16));
 
-							if((c==0x1B)||(i==0)||(filter[0]=' '))
+							if((c==0x1B)||(i==0)||(filter[0]==' '))
 							{
 								filtermode=0;
 								hxc_printf(0,SCREEN_XRESOL/2,CURDIR_Y_POS+16,"                            ");

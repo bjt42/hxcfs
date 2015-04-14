@@ -43,6 +43,7 @@ static unsigned char driveid;
 
 extern void lockup(void);
 extern unsigned char sector[512];
+extern void sleep(int duration);
 
 int jumptotrack(unsigned char t)
 {
@@ -161,6 +162,7 @@ unsigned char wait_function_key(void)
 
 void quit()
 {
+    sleep(1);
     restore_display();
     exit(0);
 }

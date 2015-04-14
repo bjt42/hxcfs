@@ -110,5 +110,6 @@ keyboard_funct_mapper keysmap[]=
 	{FCT_SEARCH,scanF3},
 	{FCT_TOP,scanHOME},
 	{FCT_EMUCFG,scanF8},
+	{FCT_ENTERSUBDIR,scanENTER},
 	{FCT_NO_FUNCTION,0x00}
 };
