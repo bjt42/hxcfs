@@ -8,7 +8,7 @@ void clear_line(unsigned short y_pos,unsigned short val);
 int init_display(void);
 void restore_display(void);
 
-#define VERSIONCODE "1.10a"
+#define VERSIONCODE "1.10b"
 #define DATECODE "07/09/2015"
 
 extern unsigned char BGCOLOR;
