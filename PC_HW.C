@@ -75,8 +75,9 @@ unsigned char writesector(unsigned char sectornum,unsigned char* data)
 {
 	struct diskinfo_t diskInfo;
 
-	unsigned char retries=0;
-	unsigned char status;
+	unsigned char retries;
+	unsigned char resetretries=0;
+	unsigned char status=0;
 
 	diskInfo.drive=driveid;
 	diskInfo.head=0;
@@ -85,21 +86,39 @@ unsigned char writesector(unsigned char sectornum,unsigned char* data)
 	diskInfo.nsectors=1;
 	diskInfo.buffer=data;
 
-	while((status=(_bios_disk(_DISK_WRITE,&diskInfo)>>8))&&(retries<2))
+	do
 	{
+	    if(status)
+	    {
+	    #ifdef DBGMODE
+		hxc_printf(0,0,0,"-- writesector: reset retry --");
+	    #endif
 		_bios_disk(_DISK_RESET,&diskInfo);
+		++resetretries;
+	    }
+
+	    retries=0;
+
+	    while((status=(_bios_disk(_DISK_WRITE,&diskInfo)>>8))&&(retries<3))
+	    {
+	    #ifdef DBGMODE
+		hxc_printf(0,0,0,"-- writesector: retry --");
+	    #endif
 		++retries;
-	}
+	    }
+
+	} while(status&&(resetretries<1));
 
 	return status==0;
 }
 
-unsigned char readsector(unsigned char sectornum,unsigned char * data)
+unsigned char readsector(unsigned char sectornum,unsigned char* data)
 {
 	struct diskinfo_t diskInfo;
 
-	unsigned char retries=0;
-	unsigned char status;
+	unsigned char retries;
+	unsigned char resetretries=0;
+	unsigned char status=0;
 
 	diskInfo.drive=driveid;
 	diskInfo.head=0;
@@ -108,14 +127,28 @@ unsigned char readsector(unsigned char sectornum,unsigned char * data)
 	diskInfo.nsectors=1;
 	diskInfo.buffer=data;
 
-	while((status=(_bios_disk(_DISK_READ,&diskInfo)>>8))&&(retries<2))
+	do
 	{
-	#ifdef DBGMODE
-		hxc_printf(0,0,0,"-- readsector: retry --");
-	#endif
+	    if(status)
+	    {
+	    #ifdef DBGMODE
+		hxc_printf(0,0,0,"-- readsector: reset retry --");
+	    #endif
 		_bios_disk(_DISK_RESET,&diskInfo);
+		++resetretries;
+	    }
+
+	    retries=0;
+
+	    while((status=(_bios_disk(_DISK_READ,&diskInfo)>>8))&&(retries<3))
+	    {
+	    #ifdef DBGMODE
+		hxc_printf(0,0,0,"-- readsector: retry --");
+	    #endif
 		++retries;
-	}
+	    }
+
+	} while(status&&(resetretries<1));
 
 	return status==0;
 }
@@ -130,8 +163,15 @@ unsigned char get_char(void)
 {
 	unsigned int thechar=0;
 
+	// Drain buffer
+	while(_bios_keybrd(_KEYBRD_READY))
+	{
+	    _bios_keybrd(_KEYBRD_READ);
+	}
+
 	while(!(thechar&0xff))
 	{
+	    while(!_bios_keybrd(_KEYBRD_READY));
 	    thechar=_bios_keybrd(_KEYBRD_READ);
 	}
 
@@ -143,9 +183,16 @@ unsigned char wait_function_key(void)
 	unsigned char key,i,key_code;
 	unsigned char function_code=FCT_NO_FUNCTION;
 
+	// Drain buffer
+	while(_bios_keybrd(_KEYBRD_READY))
+	{
+	    _bios_keybrd(_KEYBRD_READ);
+	}
+
 	while(function_code==FCT_NO_FUNCTION)
 	{
-	    key=_bios_keybrd(_NKEYBRD_READ)>>8;
+	    while(!_bios_keybrd(_KEYBRD_READY));
+	    key=_bios_keybrd(_KEYBRD_READ)>>8;
 
 	    i=0;
 	    do
